@@ -25,13 +25,21 @@ func setupTestRouter() {
 	// Load test environment
 	if err := godotenv.Load("../.env.test"); err != nil {
 		// Use default test values if .env.test doesn't exist
-		os.Setenv("APP_ENV", "test")
-		os.Setenv("JWT_SECRET", "test_secret_key")
-		os.Setenv("DB_HOST", "localhost")
-		os.Setenv("DB_PORT", "5432")
-		os.Setenv("DB_USER", "postgres")
-		os.Setenv("DB_PASSWORD", "yourpassword")
-		os.Setenv("DB_NAME", "todos_test")
+		defaults := map[string]string{
+			"APP_ENV":     "test",
+			"JWT_SECRET":  "test_secret_key",
+			"DB_HOST":     "localhost",
+			"DB_PORT":     "5432",
+			"DB_USER":     "postgres",
+			"DB_PASSWORD": "yourpassword",
+			"DB_NAME":     "todos_test",
+		}
+
+		for key, value := range defaults {
+			if setErr := os.Setenv(key, value); setErr != nil {
+				log.Fatalf("Failed to set test env %s: %v", key, setErr)
+			}
+		}
 	}
 
 	// Load configuration
@@ -80,7 +88,7 @@ func TestRegister(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 		assert.True(t, response["success"].(bool))
 		assert.NotEmpty(t, response["data"])
 	})
@@ -125,7 +133,7 @@ func TestLogin(t *testing.T) {
 		Email:    "jane@example.com",
 		Password: "password123",
 	}
-	user.HashPassword()
+	assert.NoError(t, user.HashPassword())
 	database.DB.Create(&user)
 
 	t.Run("Success - Valid credentials", func(t *testing.T) {
@@ -144,7 +152,7 @@ func TestLogin(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 		assert.True(t, response["success"].(bool))
 
 		// Extract token for use in other tests

@@ -25,9 +25,10 @@ func GetTodos(c *gin.Context) {
 	completed := c.Query("completed")
 	query := database.DB.Where("user_id = ?", userID)
 
-	if completed == "true" {
+	switch completed {
+	case "true":
 		query = query.Where("completed = ?", true)
-	} else if completed == "false" {
+	case "false":
 		query = query.Where("completed = ?", false)
 	}
 

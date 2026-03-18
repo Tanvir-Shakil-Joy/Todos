@@ -52,7 +52,11 @@ func main() {
 	if err := database.Connect(cfg); err != nil {
 		log.Fatalf("❌ Failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer func() {
+		if err := database.Close(); err != nil {
+			log.Printf("⚠️ Failed to close database connection: %v", err)
+		}
+	}()
 
 	// Set Gin mode
 	if cfg.IsProduction() {

@@ -28,7 +28,7 @@ func getAuthToken(t *testing.T, email, password string) string {
 	testRouter.ServeHTTP(w, req)
 
 	var response map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 
 	data := response["data"].(map[string]interface{})
 	return data["token"].(string)
@@ -44,7 +44,7 @@ func createTestUserAndLogin(t *testing.T) string {
 		Email:    "testuser@example.com",
 		Password: "password123",
 	}
-	user.HashPassword()
+	assert.NoError(t, user.HashPassword())
 	database.DB.Create(&user)
 
 	return getAuthToken(t, "testuser@example.com", "password123")
@@ -71,7 +71,7 @@ func TestCreateTodo(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 		assert.True(t, response["success"].(bool))
 	})
 
@@ -131,7 +131,7 @@ func TestGetTodos(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 		assert.True(t, response["success"].(bool))
 		assert.Equal(t, float64(3), response["count"])
 	})
@@ -161,7 +161,7 @@ func TestUpdateTodo(t *testing.T) {
 	testRouter.ServeHTTP(w, req)
 
 	var createResp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &createResp)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &createResp))
 	data := createResp["data"].(map[string]interface{})
 	todoID := int(data["ID"].(float64))
 
@@ -215,7 +215,7 @@ func TestDeleteTodo(t *testing.T) {
 	testRouter.ServeHTTP(w, req)
 
 	var createResp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &createResp)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &createResp))
 	data := createResp["data"].(map[string]interface{})
 	todoID := int(data["ID"].(float64))
 
